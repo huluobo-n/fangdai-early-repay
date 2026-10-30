@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>房贷提前还款利息对比计算器 - 缩短年限 vs 减少月供</title>
+  <meta name="description" content="免费房贷提前还款利息对比工具：对比不提前还与提前还后的剩余利息、月供与期数变化，支持等额本息/等额本金、缩短年限或减少月供。仅供参考，以银行合同为准。" />
+  <meta name="keywords" content="提前还款,利息对比,房贷计算器,等额本息,等额本金,缩短年限,减少月供" />
+  <meta name="robots" content="index,follow" />
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1a2332;
+      --muted: #5a6a7a;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --accent: #0d9488;
+      --warn: #b45309;
+      --good: #047857;
+      --bad: #b91c1c;
+      --shadow: 0 8px 24px rgba(26, 35, 50, 0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 220px);
+      color: var(--text);
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+    }
+    header.hero {
+      margin-bottom: 18px;
+    }
+    header.hero h1 {
+      font-size: clamp(1.35rem, 4vw, 1.85rem);
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    header.hero p.lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+    .stats-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0 18px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .stats-bar span {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 16px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    label {
+      display: block;
+      font-size: 0.86rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .field { margin-bottom: 2px; }
+    input[type="number"], select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+    input[type="number"]:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .hint {
+      font-size: 0.78rem;
+      color: #8896a6;
+      margin-top: 4px;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--primary);
+      color: #fff;
+      flex: 1;
+      min-width: 140px;
+    }
+    button.primary:hover { background: var(--primary-hover); }
+    button.ghost {
+      background: #f1f5f9;
+      color: var(--text);
+    }
+    .error {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fef2f2;
+      color: var(--bad);
+      font-size: 0.92rem;
+    }
+    .error.show { display: block; }
+    .result-hidden { display: none; }
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px) {
+      .compare { grid-template-columns: 1fr; }
+    }
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fafbfd;
+    }
+    .panel.before { border-top: 3px solid #94a3b8; }
+    .panel.after { border-top: 3px solid var(--accent); }
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+    }
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px dashed #e8eef5;
+      font-size: 0.92rem;
+    }
+    .metric:last-child { border-bottom: none; }
+    .metric .k { color: var(--muted); }
+    .metric .v { font-weight: 650; text-align: right; }
+    .savings {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
+      border: 1px solid #a7f3d0;
+    }
+    .savings .big {
+      font-size: 1.45rem;
+      font-weight: 750;
+      color: var(--good);
+      margin: 4px 0 2px;
+    }
+    .savings .sub { color: var(--muted); font-size: 0.88rem; }
+    .note {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    details.faq {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: #fff;
+    }
+    details.faq summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    details.faq p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    footer {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>房贷提前还款利息对比计算器</h1>
+      <p class="lead">对比「不提前还」与「提前还」后的剩余利息、月供与期数。支持等额本息 / 等额本金，可选缩短年限或减少月供。</p>
+      <div class="stats-bar" aria-label="本地使用统计">
+        <span>开始计算：<strong id="stat-start">0</strong></span>
+        <span>算出结果：<strong id="stat-done">0</strong></span>
+        <span>完成率：<strong id="stat-rate">—</strong></span>
+      </div>
+    </header>
+
+    <section class="card" aria-labelledby="form-title">
+      <h2 id="form-title">贷款与提前还款参数</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="principal">贷款总额（元）</label>
+          <input id="principal" type="number" min="1" step="1" value="1000000" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label for="annualRate">年利率（%）</label>
+          <input id="annualRate" type="number" min="0.01" step="0.01" value="3.45" inputmode="decimal" />
+          <div class="hint">按合同年化利率填写，如 3.45</div>
+        </div>
+        <div class="field">
+          <label for="years">贷款年限（年）</label>
+          <input id="years" type="number" min="1" max="50" step="1" value="30" inputmode="numeric" />
+          <div class="hint">也可直接改下方总期数</div>
+        </div>
+        <div class="field">
+          <label for="totalPeriods">贷款总期数（月）</label>
+          <input id="totalPeriods" type="number" min="1" max="600" step="1" value="360" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label for="paidPeriods">已还期数（月）</label>
+          <input id="paidPeriods" type="number" min="0" step="1" value="36" inputmode="numeric" />
+        </div>
+        <div class="field">
+          <label for="method">还款方式</label>
+          <select id="method">
+            <option value="epi">等额本息</option>
+            <option value="ep">等额本金</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="prepayAmount">提前还款金额（元）</label>
+          <input id="prepayAmount" type="number" min="0" step="1" value="100000" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label for="prepayMode">提前还款方式</label>
+          <select id="prepayMode">
+            <option value="shorten">缩短年限（月供大致不变）</option>
+            <option value="reduce">减少月供（期数不变）</option>
+          </select>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="button" class="primary" id="btn-calc">开始计算 · 利息对比</button>
+        <button type="button" class="ghost" id="btn-reset">恢复示例</button>
+      </div>
+      <div class="error" id="error" role="alert"></div>
+    </section>
+
+    <section class="card result-hidden" id="result" aria-live="polite">
+      <h2>对比结果</h2>
+      <div class="savings" id="savings-box">
+        <div class="sub">相对不提前还，预计可节省利息</div>
+        <div class="big" id="saved-interest">¥0</div>
+        <div class="sub" id="savings-note"></div>
+      </div>
+      <div class="compare" style="margin-top:14px">
+        <div class="panel before">
+          <h3>不提前还</h3>
+          <div class="metric"><span class="k">当前剩余本金</span><span class="v" id="b-remain-prin">—</span></div>
+          <div class="metric"><span class="k">当前月供</span><span class="v" id="b-payment">—</span></div>
+          <div class="metric"><span class="k">剩余期数</span><span class="v" id="b-periods">—</span></div>
+          <div class="metric"><span class="k">剩余利息合计</span><span class="v" id="b-interest">—</span></div>
+          <div class="metric"><span class="k">剩余本息合计</span><span class="v" id="b-total">—</span></div>
+        </div>
+        <div class="panel after">
+          <h3>提前还之后</h3>
+          <div class="metric"><span class="k">提前还后本金</span><span class="v" id="a-remain-prin">—</span></div>
+          <div class="metric"><span class="k">新月供</span><span class="v" id="a-payment">—</span></div>
+          <div class="metric"><span class="k">新剩余期数</span><span class="v" id="a-periods">—</span></div>
+          <div class="metric"><span class="k">剩余利息合计</span><span class="v" id="a-interest">—</span></div>
+          <div class="metric"><span class="k">剩余本息合计</span><span class="v" id="a-total">—</span></div>
+        </div>
+      </div>
+      <p class="note" id="explain"></p>
+    </section>
+
+    <section class="card" aria-labelledby="faq-title">
+      <h2 id="faq-title">常见问题</h2>
+      <details class="faq">
+        <summary>缩短年限和减少月供有什么区别？</summary>
+        <p>缩短年限：提前还掉一部分本金后，尽量保持原月供水平，从而更快还清、通常更省利息。减少月供：剩余期数基本不变，每月还款额下降，现金流更轻松，但节省的利息一般少于缩短年限。</p>
+      </details>
+      <details class="faq">
+        <summary>等额本息和等额本金怎么选？</summary>
+        <p>等额本息每月还款额固定；等额本金前期月供更高、本金下降更快。本工具按你合同上的还款方式计算；实际以银行还款计划为准。</p>
+      </details>
+      <details class="faq">
+        <summary>结果为什么可能和银行 APP 有差异？</summary>
+        <p>银行可能按日计息、存在还款日规则、费率/罚息、公积金组合贷分账等差异。本页用常见标准公式做估算，仅供参考，请以银行合同与还款计划为准。</p>
+      </details>
+    </section>
+
+    <footer>
+      仅供参考，以银行合同为准。数据仅在浏览器本地计算，不上传服务器。<br />
+      <!-- analytics: localStorage counters below; swap later for Umami/Plausible -->
+    </footer>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // --- Lightweight local analytics (localStorage). Later: replace with Umami/Plausible. ---
+    var STORAGE_KEY = "fangdai_early_repay_stats_v1";
+    function loadStats() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { start: 0, done: 0 };
+        var o = JSON.parse(raw);
+        return { start: Number(o.start) || 0, done: Number(o.done) || 0 };
+      } catch (e) {
+        return { start: 0, done: 0 };
+      }
+    }
+    function saveStats(s) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+    }
+    function renderStats() {
+      var s = loadStats();
+      document.getElementById("stat-start").textContent = String(s.start);
+      document.getElementById("stat-done").textContent = String(s.done);
+      var rate = s.start > 0 ? ((s.done / s.start) * 100).toFixed(1) + "%" : "—";
+      document.getElementById("stat-rate").textContent = rate;
+    }
+    function bump(kind) {
+      var s = loadStats();
+      if (kind === "start") s.start += 1;
+      if (kind === "done") s.done += 1;
+      saveStats(s);
+      renderStats();
+      // // Umami: umami.track(kind === "start" ? "calc_start" : "calc_done");
+      // // Plausible: plausible(kind === "start" ? "Calc Start" : "Calc Done");
+    }
+    renderStats();
+
+    var yearsEl = document.getElementById("years");
+    var totalEl = document.getElementById("totalPeriods");
+    var syncing = false;
+    yearsEl.addEventListener("input", function () {
+      if (syncing) return;
+      syncing = true;
+      var y = parseInt(yearsEl.value, 10);
+      if (y > 0) totalEl.value = String(y * 12);
+      syncing = false;
+    });
+    totalEl.addEventListener("input", function () {
+      if (syncing) return;
+      syncing = true;
+      var t = parseInt(totalEl.value, 10);
+      if (t > 0) yearsEl.value = String(Math.round((t / 12) * 10) / 10);
+      syncing = false;
+    });
+
+    function money(n) {
+      if (!isFinite(n)) return "—";
+      return "¥" + Math.round(n).toLocaleString("zh-CN");
+    }
+    function monthsLabel(m) {
+      if (!isFinite(m) || m < 0) return "—";
+      m = Math.round(m);
+      var y = Math.floor(m / 12);
+      var r = m % 12;
+      if (y <= 0) return m + " 期";
+      if (r === 0) return m + " 期（约 " + y + " 年）";
+      return m + " 期（约 " + y + " 年 " + r + " 个月）";
+    }
+
+    // 等额本息月供
+    function epiPayment(P, r, n) {
+      if (n <= 0) return 0;
+      if (Math.abs(r) < 1e-12) return P / n;
+      var pow = Math.pow(1 + r, n);
+      return P * r * pow / (pow - 1);
+    }
+    // 等额本息：已还 k 期后剩余本金
+    function epiRemainPrincipal(P, r, n, k) {
+      if (k >= n) return 0;
+      if (Math.abs(r) < 1e-12) return P * (n - k) / n;
+      var powN = Math.pow(1 + r, n);
+      var powK = Math.pow(1 + r, k);
+      return P * (powN - powK) / (powN - 1);
+    }
+    // 等额本息：已知月供与本金，求还清所需期数
+    function epiPeriodsForPayment(P, r, M) {
+      if (P <= 0) return 0;
+      if (Math.abs(r) < 1e-12) return Math.ceil(P / M);
+      if (M <= P * r) return Infinity;
+      return Math.ceil(Math.log(M / (M - P * r)) / Math.log(1 + r));
+    }
+    // 等额本息剩余利息（按固定月供还完）
+    function epiRemainInterest(P, r, nRemain, M) {
+      if (P <= 0 || nRemain <= 0) return 0;
+      return M * nRemain - P;
+    }
+
+    // 等额本金：第 k+1 期起的月供（下一期）与剩余本金
+    function epRemainPrincipal(P, n, k) {
+      var monthlyPrin = P / n;
+      return Math.max(0, P - monthlyPrin * k);
+    }
+    function epNextPayment(remainP, monthlyPrin, r) {
+      return monthlyPrin + remainP * r;
+    }
+    // 等额本金：从当前剩余本金、剩余期数，按「每月等本」还完的利息合计
+    function epRemainInterest(remainP, r, nRemain) {
+      if (remainP <= 0 || nRemain <= 0) return 0;
+      // 利息 = r * remainP * (nRemain+1) / 2  （等差数列）
+      return remainP * r * (nRemain + 1) / 2;
+    }
+    // 等额本金缩短年限：提前还后，用「接近原月供上限」或固定原每月本金思路——
+    // 常见口径：保持每月偿还本金额 = 原 贷款总额/原总期数，或按新本金重算期数使首月供≈原下一期月供。
+    // 本工具采用：缩短年限时，尽量使新月供（首期）≈ 原下一期月供，反推新期数；减少月供时保持剩余期数不变。
+    function epPeriodsForTargetPayment(remainP, r, targetPay) {
+      if (remainP <= 0) return 0;
+      // 第1期：monthlyPrin + remainP*r = targetPay => monthlyPrin = targetPay - remainP*r
+      var monthlyPrin = targetPay - remainP * r;
+      if (monthlyPrin <= 0) return Infinity;
+      return Math.ceil(remainP / monthlyPrin);
+    }
+    function epScheduleInterest(remainP, r, nRemain) {
+      return epRemainInterest(remainP, r, nRemain);
+    }
+    function epFirstPayment(remainP, r, nRemain) {
+      if (nRemain <= 0) return 0;
+      var monthlyPrin = remainP / nRemain;
+      return monthlyPrin + remainP * r;
+    }
+    // 等额本金「平均月供」展示用（首末期平均）
+    function epAvgPayment(remainP, r, nRemain) {
+      if (nRemain <= 0) return 0;
+      var first = epFirstPayment(remainP, r, nRemain);
+      var monthlyPrin = remainP / nRemain;
+      var last = monthlyPrin + monthlyPrin * r;
+      return (first + last) / 2;
+    }
+
+    function showError(msg) {
+      var el = document.getElementById("error");
+      el.textContent = msg;
+      el.classList.add("show");
+    }
+    function clearError() {
+      var el = document.getElementById("error");
+      el.textContent = "";
+      el.classList.remove("show");
+    }
+
+    function calculate() {
+      bump("start");
+      clearError();
+
+      var P0 = Number(document.getElementById("principal").value);
+      var annualPct = Number(document.getElementById("annualRate").value);
+      var n = parseInt(document.getElementById("totalPeriods").value, 10);
+      var k = parseInt(document.getElementById("paidPeriods").value, 10);
+      var method = document.getElementById("method").value;
+      var prepay = Number(document.getElementById("prepayAmount").value);
+      var prepayMode = document.getElementById("prepayMode").value;
+      var r = annualPct / 100 / 12;
+
+      if (!(P0 > 0)) return void showError("请填写有效的贷款总额。");
+      if (!(annualPct > 0)) return void showError("请填写有效的年利率。");
+      if (!(n > 0)) return void showError("请填写有效的贷款期数。");
+      if (k < 0 || k >= n) return void showError("已还期数需 ≥0 且小于总期数。");
+      if (!(prepay >= 0)) return void showError("提前还款金额不能为负。");
+
+      var remainBefore;
+      var payBefore;
+      var periodsBefore = n - k;
+      var interestBefore;
+      var totalBefore;
+
+      if (method === "epi") {
+        payBefore = epiPayment(P0, r, n);
+        remainBefore = epiRemainPrincipal(P0, r, n, k);
+        interestBefore = epiRemainInterest(remainBefore, r, periodsBefore, payBefore);
+        totalBefore = remainBefore + interestBefore;
+      } else {
+        remainBefore = epRemainPrincipal(P0, n, k);
+        var monthlyPrin0 = P0 / n;
+        payBefore = epNextPayment(remainBefore, monthlyPrin0, r);
+        interestBefore = epRemainInterest(remainBefore, r, periodsBefore);
+        totalBefore = remainBefore + interestBefore;
+      }
+
+      if (prepay >= remainBefore) {
+        // 一次还清
+        document.getElementById("result").classList.remove("result-hidden");
+        document.getElementById("saved-interest").textContent = money(interestBefore);
+        document.getElementById("savings-note").textContent = "提前还款金额 ≥ 剩余本金，相当于结清贷款，节省全部剩余利息。";
+        document.getElementById("b-remain-prin").textContent = money(remainBefore);
+        document.getElementById("b-payment").textContent = money(payBefore) + (method === "ep" ? "（下一期）" : "");
+        document.getElementById("b-periods").textContent = monthsLabel(periodsBefore);
+        document.getElementById("b-interest").textContent = money(interestBefore);
+        document.getElementById("b-total").textContent = money(totalBefore);
+        document.getElementById("a-remain-prin").textContent = money(0);
+        document.getElementById("a-payment").textContent = money(0);
+        document.getElementById("a-periods").textContent = "0 期";
+        document.getElementById("a-interest").textContent = money(0);
+        document.getElementById("a-total").textContent = money(0);
+        document.getElementById("explain").textContent = "公式路径：先按" + (method === "epi" ? "等额本息" : "等额本金") + "标准公式求剩余本金；提前额覆盖全部剩余本金后不再计息。仅供参考，以银行合同为准。";
+        bump("done");
+        return;
+      }
+
+      var remainAfter = remainBefore - prepay;
+      var payAfter;
+      var periodsAfter;
+      var interestAfter;
+      var modeText;
+
+      if (method === "epi") {
+        if (prepayMode === "shorten") {
+          // 缩短年限：月供保持为原月供，反推新期数
+          payAfter = payBefore;
+          periodsAfter = epiPeriodsForPayment(remainAfter, r, payAfter);
+          if (!isFinite(periodsAfter) || periodsAfter <= 0) {
+            return void showError("按当前月供无法覆盖利息，请增大提前还款额或改选「减少月供」。");
+          }
+          interestAfter = epiRemainInterest(remainAfter, r, periodsAfter, payAfter);
+          modeText = "提前还款方式为缩短年限：保持原月供，剩余期数由 " + periodsBefore + " 期降至约 " + periodsAfter + " 期。";
+        } else {
+          // 减少月供：期数不变
+          periodsAfter = periodsBefore;
+          payAfter = epiPayment(remainAfter, r, periodsAfter);
+          interestAfter = epiRemainInterest(remainAfter, r, periodsAfter, payAfter);
+          modeText = "提前还款方式为减少月供：剩余期数不变（" + periodsAfter + " 期），月供由约 " + Math.round(payBefore) + " 元降至约 " + Math.round(payAfter) + " 元。";
+        }
+      } else {
+        // 等额本金
+        if (prepayMode === "shorten") {
+          // 目标：新首期月供 ≈ 原下一期月供
+          periodsAfter = epPeriodsForTargetPayment(remainAfter, r, payBefore);
+          if (!isFinite(periodsAfter) || periodsAfter <= 0) {
+            return void showError("无法在接近原月供的前提下缩短年限，请调整金额或改选「减少月供」。");
+          }
+          // 若算出的期数反而变长，夹紧为不超过原剩余期数
+          if (periodsAfter > periodsBefore) periodsAfter = periodsBefore;
+          payAfter = epFirstPayment(remainAfter, r, periodsAfter);
+          interestAfter = epScheduleInterest(remainAfter, r, periodsAfter);
+          modeText = "提前还款方式为缩短年限（等额本金）：按接近原下一期月供反推期数，剩余约 " + periodsAfter + " 期；展示的新月供为新计划首期。";
+        } else {
+          periodsAfter = periodsBefore;
+          payAfter = epFirstPayment(remainAfter, r, periodsAfter);
+          interestAfter = epScheduleInterest(remainAfter, r, periodsAfter);
+          modeText = "提前还款方式为减少月供（等额本金）：剩余期数不变，新月供为新计划首期（后续逐月递减）。";
+        }
+      }
+
+      var saved = interestBefore - interestAfter;
+      var totalAfter = remainAfter + interestAfter;
+
+      document.getElementById("result").classList.remove("result-hidden");
+      document.getElementById("saved-interest").textContent = money(Math.max(0, saved));
+      document.getElementById("savings-note").textContent =
+        "月供变化：" + money(payBefore) + " → " + money(payAfter) +
+        "；剩余期数：" + periodsBefore + " → " + periodsAfter + "。";
+
+      document.getElementById("b-remain-prin").textContent = money(remainBefore);
+      document.getElementById("b-payment").textContent = money(payBefore) + (method === "ep" ? "（下一期）" : "");
+      document.getElementById("b-periods").textContent = monthsLabel(periodsBefore);
+      document.getElementById("b-interest").textContent = money(interestBefore);
+      document.getElementById("b-total").textContent = money(totalBefore);
+
+      document.getElementById("a-remain-prin").textContent = money(remainAfter);
+      document.getElementById("a-payment").textContent = money(payAfter) + (method === "ep" ? "（新计划首期）" : "");
+      document.getElementById("a-periods").textContent = monthsLabel(periodsAfter);
+      document.getElementById("a-interest").textContent = money(interestAfter);
+      document.getElementById("a-total").textContent = money(totalAfter);
+
+      document.getElementById("explain").textContent =
+        modeText +
+        " 计算路径：月利率=年利率/12；剩余本金按" + (method === "epi" ? "等额本息闭式公式" : "等额本金已还本金扣减") +
+        "；节省利息=不提前还剩余利息−提前还后剩余利息。未计入违约金/按日计息差异。仅供参考，以银行合同为准。";
+
+      bump("done");
+      document.getElementById("result").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function resetDemo() {
+      document.getElementById("principal").value = "1000000";
+      document.getElementById("annualRate").value = "3.45";
+      document.getElementById("years").value = "30";
+      document.getElementById("totalPeriods").value = "360";
+      document.getElementById("paidPeriods").value = "36";
+      document.getElementById("method").value = "epi";
+      document.getElementById("prepayAmount").value = "100000";
+      document.getElementById("prepayMode").value = "shorten";
+      clearError();
+      document.getElementById("result").classList.add("result-hidden");
+    }
+
+    document.getElementById("btn-calc").addEventListener("click", calculate);
+    document.getElementById("btn-reset").addEventListener("click", resetDemo);
+  })();
+  </script>
+</body>
+</html>
