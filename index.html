@@ -219,7 +219,40 @@
       font-size: 0.8rem;
       text-align: center;
     }
-  </style>
+  
+    .guide {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      margin: 0 0 16px;
+    }
+    .guide h2 {
+      font-size: 1.05rem;
+      margin: 0 0 8px;
+    }
+    .guide p {
+      margin: 0;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    footer .site-nav {
+      margin: 8px 0 4px;
+    }
+    footer .site-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      margin: 0 2px;
+    }
+    footer .site-nav a:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+</style>
+  <!-- AdSense auto ads: uncomment after publisher ID
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+-->
 </head>
 <body>
   <div class="wrap">
@@ -232,6 +265,11 @@
         <span>完成率：<strong id="stat-rate">—</strong></span>
       </div>
     </header>
+    <section class="guide" id="site-guide" aria-labelledby="guide-title">
+      <h2 id="guide-title">使用说明</h2>
+      <p>本站提供免费的房贷提前还款利息对比：在浏览器中输入剩余本金、年利率、剩余期数、还款方式（等额本息/等额本金）以及拟提前还的金额与策略（缩短年限或减少月供），即可对照「不提前还」与「提前还」后的剩余利息、新月供与期数变化。全部计算在本机完成，不会上传贷款信息。请注意：银行可能收取违约金、存在部分提前还限制，且利率、还款日以合同与银行系统为准；本页结果仅供参考，不构成理财或信贷建议。正式办理前请向贷款行确认可还额度、费用与新还款计划。</p>
+    </section>
+
 
     <section class="card" aria-labelledby="form-title">
       <h2 id="form-title">贷款与提前还款参数</h2>
@@ -329,7 +367,16 @@
     </section>
 
     <footer>
-      仅供参考，以银行合同为准。数据仅在浏览器本地计算，不上传服务器。<br />
+      <nav class="site-nav" aria-label="站点导航">
+        <a href="/">首页</a>
+        <span aria-hidden="true">·</span>
+        <a href="about.html">关于</a>
+        <span aria-hidden="true">·</span>
+        <a href="privacy.html">隐私政策</a>
+        <span aria-hidden="true">·</span>
+        <a href="contact.html">联系我们</a>
+      </nav>
+仅供参考，以银行合同为准。数据仅在浏览器本地计算，不上传服务器。<br />
       <!-- analytics: localStorage counters below; swap later for Umami/Plausible -->
     </footer>
   </div>
